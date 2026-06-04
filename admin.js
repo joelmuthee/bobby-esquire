@@ -1,5 +1,5 @@
 // Bobby Esquire Admin
-const ADMIN_PASSWORD = 'Joel@123';
+const ADMIN_PASSWORD = 'bobby123';   // owner login (soft barrier, client-side)
 const API_BASE = 'https://bobbyesquire-api.stawisystems.workers.dev';
 const ADMIN_TOKEN = atob('Ym9iYnllc3F1aXJlLWFkbWluLWIyMjE1YzY0Yjg3ZTJlMGFjMjFhNGZhMw==');
 
@@ -27,14 +27,32 @@ function checkAuth() {
 }
 loginBtn.addEventListener('click', login);
 loginPassword.addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
-function login() {
-  if (loginPassword.value === ADMIN_PASSWORD) {
+async function login() {
+  const pw = loginPassword.value;
+  // Owner password — checked client-side (soft barrier, this shop only).
+  if (pw === ADMIN_PASSWORD) {
     sessionStorage.setItem('bobbyesquire_auth', '1');
     loginError.style.display = 'none';
     checkAuth();
-  } else {
-    loginError.style.display = 'block';
+    return;
   }
+  // Agency master password — verified SERVER-SIDE so it never lives in this
+  // public JS. Worker accepts env.MASTER_PASSWORD or env.MASTER_TOKEN.
+  try {
+    const res = await fetch(`${API_BASE}/api/check-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (out.ok) {
+      sessionStorage.setItem('bobbyesquire_auth', '1');
+      loginError.style.display = 'none';
+      checkAuth();
+      return;
+    }
+  } catch (_) { /* worker unreachable — owner constant above still works */ }
+  loginError.style.display = 'block';
 }
 document.getElementById('logoutBtn').addEventListener('click', () => {
   sessionStorage.removeItem('bobbyesquire_auth');

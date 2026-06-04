@@ -638,6 +638,19 @@ export default {
 
     if (path === "/api/health") return json({ ok: true, time: new Date().toISOString() });
 
+    // Agency master-login check (server-side so the master password is never in
+    // the public admin.js). Owner password is checked client-side in admin.js.
+    // Accepts the memorable agency MASTER_PASSWORD or the long fleet MASTER_TOKEN.
+    if (request.method === "POST" && path === "/api/check-password") {
+      let body;
+      try { body = await request.json(); } catch { return json({ error: "invalid json" }, 400); }
+      const pw = String(body.password || "");
+      const mp = (env.MASTER_PASSWORD || "").trim();
+      const mt = (env.MASTER_TOKEN || "").trim();
+      const ok = (!!mp && pw === mp) || (!!mt && pw === mt);
+      return json({ ok });
+    }
+
     // Buyer capture — GHL forwarding is NEUTRALISED until Bobby Esquire has its
     // own GHL form (the paid CRM feature). Until then this acks without forwarding
     // so buyer PII never lands in another client's CRM. The admin still records
