@@ -1,5 +1,5 @@
 // Bobby Esquire Admin
-const ADMIN_PASSWORD = 'bobbyesquire2026';
+const ADMIN_PASSWORD = 'Joel@123';
 const API_BASE = 'https://bobbyesquire-api.stawisystems.workers.dev';
 const ADMIN_TOKEN = atob('Ym9iYnllc3F1aXJlLWFkbWluLWIyMjE1YzY0Yjg3ZTJlMGFjMjFhNGZhMw==');
 
