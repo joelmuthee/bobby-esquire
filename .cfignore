@@ -1,0 +1,7 @@
+.claude
+.wrangler
+worker
+tools
+.tmp*
+node_modules
+Logo.jpg

@@ -1,0 +1,15 @@
+worker
+tools
+node_modules
+.tmp
+.tmp_*
+.dist
+.claude
+.wrangler
+.playwright-mcp
+.git
+.gitignore
+.cfignore
+Logo.jpg
+Original logo.jpg
+Edited logo.jpg
