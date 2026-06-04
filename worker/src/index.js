@@ -151,6 +151,9 @@ const MENSWEAR_BRANDS = [
   [/\bshirt\b/,        null,                 "Shirts"],
   ["denim",            null,                 "Jeans"],
   [/\bjeans?\b/,       null,                 "Jeans"],
+  ["chino",            null,                 "Trousers"],
+  [/\btrousers?\b/,    null,                 "Trousers"],
+  [/\bslacks?\b/,      null,                 "Trousers"],
   [/\bshorts?\b/,      null,                 "Shorts"],
   ["sneaker",          null,                 "Sneakers"],
   ["trainer",          null,                 "Sneakers"],
@@ -211,7 +214,8 @@ function parseCaptionForBag(caption) {
   }
 
   // --- Numeric jeans waist sizes (28-44) — only when category looks like jeans/shorts/joggers ---
-  const isLowerBody = /jeans?|denim|shorts?|joggers?|trouser|pants|chinos|waist/i.test(text);
+  const isLowerBody = /jeans?|denim|shorts?|joggers?|trouser|pants|chinos|slacks?|waist/i.test(text)
+    || /^(Jeans|Trousers|Shorts|Joggers)$/.test(category || "");
   if (isLowerBody) {
     const seen = new Set();
     // Lookahead for the trailing boundary so consecutive numbers ("32 34 36")
@@ -400,7 +404,7 @@ async function classifyPostWithVision(env, caption, imageUrl) {
 1. Is this a single product (one specific item or one stocked SKU) for sale? (is_product true|false)
 2. What brand / model is it? (name — short, e.g. "Tommy Hilfiger Polo", "Nike Air Force", or "New Item" if unknown)
 3. What category? Pick EXACTLY one from this list — never invent another:
-   Tshirts, Shirts, Polos, Jeans, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps
+   Tshirts, Shirts, Polos, Jeans, Trousers, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps
 
 Category guide (look carefully — this is the hardest call):
 - Tshirts: short-sleeve crew/v-neck pullover, NO collar, NO buttons. Plain tees, graphic tees.
@@ -409,7 +413,8 @@ Category guide (look carefully — this is the hardest call):
 - Hoodies: pullover or zip with a HOOD; also sweatshirts (crewnecks without zips).
 - Jackets: outerwear — bombers, denim/leather jackets, parkas, puffers, blazers count as Suits if matched to trousers, otherwise Jackets.
 - Suits: matched jacket + trousers, or formal suits/blazers.
-- Jeans: denim trousers (any wash).
+- Jeans: DENIM trousers only (any wash).
+- Trousers: non-denim full-length bottoms — chinos, dress trousers, slacks, linen/cotton pants. If you see folded/hanging trousers that are NOT denim and NOT shorts, this is Trousers (not Shirts).
 - Shorts: above-the-knee bottoms (denim, cargo, sweat).
 - Joggers: tapered casual sweatpants with elastic ankle cuffs.
 - Tracksuits: matching top + bottom athletic set (Kappa, Ellesse).
@@ -472,7 +477,7 @@ async function classifyPostWithAi(env, caption) {
 Reply with strict minified JSON only, no prose, no code fences.
 
 Schema:
-{"is_product": true|false, "name": "<short brand + model OR generic descriptor>", "category": "<exactly one of: Tshirts, Shirts, Polos, Jeans, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps>", "reason": "<3-6 words>"}
+{"is_product": true|false, "name": "<short brand + model OR generic descriptor>", "category": "<exactly one of: Tshirts, Shirts, Polos, Jeans, Trousers, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps>", "reason": "<3-6 words>"}
 
 NEVER output Crossbody, Tote, Clutch, Hobo, Heels, Sandals, Bags, Handbags — Bobby Esquire only sells men's clothing and footwear.
 
@@ -509,7 +514,7 @@ Caption: """${trimmed}"""`;
 // Ryker stocks men's clothing + footwear only. Coerce any AI-suggested category
 // that's outside the allowed list to either the closest legal option or null.
 const RYKER_CATEGORIES = new Set([
-  "Tshirts","Shirts","Polos","Jeans","Shorts","Joggers","Tracksuits",
+  "Tshirts","Shirts","Polos","Jeans","Trousers","Shorts","Joggers","Tracksuits",
   "Hoodies","Jackets","Suits","Shoes","Sneakers","Boots","Caps",
 ]);
 function coerceCategory(c) {
@@ -524,6 +529,7 @@ function coerceCategory(c) {
   if (/^(shirts?|button[\s\-]?ups?|oxfords?)$/i.test(lower)) return "Shirts";
   if (/^polos?$/i.test(lower)) return "Polos";
   if (/^(jeans?|denim)$/i.test(lower)) return "Jeans";
+  if (/^(trousers?|chinos?|slacks?|pants?|dress\s*pants?|linen\s*(pants?|trousers?))$/i.test(lower)) return "Trousers";
   if (/^shorts?$/i.test(lower)) return "Shorts";
   if (/^joggers?$/i.test(lower)) return "Joggers";
   if (/^(tracksuits?|track\s*suits?)$/i.test(lower)) return "Tracksuits";
