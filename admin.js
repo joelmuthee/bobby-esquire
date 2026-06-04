@@ -439,7 +439,7 @@ function generateDescription(name, cat) {
     Tshirts: 'tee', Shirts: 'shirt', Polos: 'polo', Jeans: 'jeans', Trousers: 'pair of trousers', Shorts: 'shorts',
     Joggers: 'joggers', Tracksuits: 'tracksuit', Hoodies: 'hoodie', Jackets: 'jacket', Suits: 'suit',
     Shoes: 'pair of shoes', Sneakers: 'pair of sneakers', Boots: 'pair of boots',
-    Caps: 'cap', Belts: 'belt', Watches: 'watch', Jewellery: 'piece', Rings: 'ring', Chains: 'chain', Earrings: 'earrings', Accessories: 'piece',
+    Caps: 'cap', Bags: 'bag', Belts: 'belt', Watches: 'watch', Jewellery: 'piece', Rings: 'ring', Chains: 'chain', Earrings: 'earrings', Accessories: 'piece',
   };
   const type = catMap[cat] || 'piece';
 
@@ -2083,7 +2083,7 @@ adminItemSearchInput?.addEventListener('input', () => {
 // subset. Dedupe is server-side by `ig_<shortcode>` so the button is
 // idempotent and never re-adds an item already in the catalog.
 const IG_USER_ID = '70096390865';
-const MENSWEAR_CATEGORIES = ['Tshirts', 'Shirts', 'Polos', 'Jeans', 'Trousers', 'Shorts', 'Joggers', 'Tracksuits', 'Hoodies', 'Jackets', 'Suits', 'Shoes', 'Sneakers', 'Boots', 'Caps'];
+const MENSWEAR_CATEGORIES = ['Tshirts', 'Shirts', 'Polos', 'Jeans', 'Trousers', 'Shorts', 'Joggers', 'Tracksuits', 'Hoodies', 'Jackets', 'Suits', 'Shoes', 'Sneakers', 'Boots', 'Caps', 'Bags'];
 
 let igSyncCandidates = [];
 

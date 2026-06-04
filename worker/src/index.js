@@ -160,6 +160,9 @@ const MENSWEAR_BRANDS = [
   [/\bboots?\b/,       null,                 "Boots"],
   [/\bcaps?\b/,        null,                 "Caps"],
   [/\bhats?\b/,        null,                 "Caps"],
+  ["duffle",           null,                 "Bags"],
+  ["duffel",           null,                 "Bags"],
+  [/\bbags?\b/,        null,                 "Bags"],
   // Generic "shoes" last — only used if no other footwear type matched
   [/\bshoes?\b/,       null,                 "Shoes"],
 ];
@@ -404,7 +407,7 @@ async function classifyPostWithVision(env, caption, imageUrl) {
 1. Is this a single product (one specific item or one stocked SKU) for sale? (is_product true|false)
 2. What brand / model is it? (name — short, e.g. "Tommy Hilfiger Polo", "Nike Air Force", or "New Item" if unknown)
 3. What category? Pick EXACTLY one from this list — never invent another:
-   Tshirts, Shirts, Polos, Jeans, Trousers, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps
+   Tshirts, Shirts, Polos, Jeans, Trousers, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps, Bags
 
 Category guide (look carefully — this is the hardest call):
 - Tshirts: short-sleeve crew/v-neck pullover, NO collar, NO buttons. Plain tees, graphic tees.
@@ -422,8 +425,9 @@ Category guide (look carefully — this is the hardest call):
 - Boots: ankle-high or taller — Timberland, Dr Martens, work boots, hiking boots, chukkas.
 - Shoes: formal/dress shoes ONLY — Oxford, derby, brogue, loafers, monk-strap. Never use "Shoes" for sneakers.
 - Caps: caps, hats, beanies.
+- Bags: men's duffle, travel, gym and weekender bags.
 
-NEVER use Crossbody, Tote, Clutch, Hobo, Heels, Sandals, Bags, Handbags — Bobby Esquire only sells men's clothing and footwear. If the photo shows a women's bag or women's heels, set is_product=false.
+NEVER use Crossbody, Clutch, Hobo, Handbags, Purse, Heels, Stilettos — those are women's. If the photo shows a women's handbag or women's heels, set is_product=false. (Men's duffle/travel bags ARE sold and belong in Bags.)
 
 is_product=false ONLY for: shop intros, marketing banners, owner photos, restock teasers, holiday greetings, "DM us" announcements without a specific item.
 
@@ -477,9 +481,9 @@ async function classifyPostWithAi(env, caption) {
 Reply with strict minified JSON only, no prose, no code fences.
 
 Schema:
-{"is_product": true|false, "name": "<short brand + model OR generic descriptor>", "category": "<exactly one of: Tshirts, Shirts, Polos, Jeans, Trousers, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps>", "reason": "<3-6 words>"}
+{"is_product": true|false, "name": "<short brand + model OR generic descriptor>", "category": "<exactly one of: Tshirts, Shirts, Polos, Jeans, Trousers, Shorts, Joggers, Tracksuits, Hoodies, Jackets, Suits, Shoes, Sneakers, Boots, Caps, Bags>", "reason": "<3-6 words>"}
 
-NEVER output Crossbody, Tote, Clutch, Hobo, Heels, Sandals, Bags, Handbags — Bobby Esquire only sells men's clothing and footwear.
+NEVER output Crossbody, Clutch, Hobo, Handbags, Purse, Heels, Stilettos — those are women's. Men's duffle/travel/gym bags ARE sold and belong in Bags.
 
 Rules:
 - is_product = true when the caption mentions a clothing/footwear item and at least one size signal (S, M, L, XL, "size 32", "UK 9", "Sizes M L XL", etc.) OR a known brand/model.
@@ -515,15 +519,17 @@ Caption: """${trimmed}"""`;
 // that's outside the allowed list to either the closest legal option or null.
 const RYKER_CATEGORIES = new Set([
   "Tshirts","Shirts","Polos","Jeans","Trousers","Shorts","Joggers","Tracksuits",
-  "Hoodies","Jackets","Suits","Shoes","Sneakers","Boots","Caps",
+  "Hoodies","Jackets","Suits","Shoes","Sneakers","Boots","Caps","Bags",
 ]);
 function coerceCategory(c) {
   if (!c) return null;
   const raw = String(c).trim();
   if (RYKER_CATEGORIES.has(raw)) return raw;
   const lower = raw.toLowerCase();
-  // Strip the bag / women's categories outright
-  if (/^(cross\s*body|tote|clutch|hobo|bags?|handbags?|purse|heels?|sandals?|stilettos?|wedges?|pumps?)$/i.test(lower)) return null;
+  // Men's bags (duffle / travel / gym) ARE stocked -> Bags.
+  if (/^(bags?|duffles?|duffels?|holdalls?|backpacks?|weekenders?|travel\s*bags?|gym\s*bags?)$/i.test(lower)) return "Bags";
+  // Strip WOMEN'S bag / shoe categories outright.
+  if (/^(cross\s*body|tote|clutch|hobo|handbags?|purse|heels?|sandals?|stilettos?|wedges?|pumps?)$/i.test(lower)) return null;
   // Plural / singular / spelling variants
   if (/^(tee|tees|t[\s\-]?shirts?)$/i.test(lower)) return "Tshirts";
   if (/^(shirts?|button[\s\-]?ups?|oxfords?)$/i.test(lower)) return "Shirts";
